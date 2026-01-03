@@ -2,7 +2,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
 from pathlib import Path
-from openai import OpenAI
+# from openai import OpenAI
 from dotenv import load_dotenv
 import uuid
 import os
@@ -25,7 +25,7 @@ DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 @app.get("/health")
