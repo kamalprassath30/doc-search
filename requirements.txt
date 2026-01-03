@@ -4,3 +4,6 @@ sentence-transformers
 scikit-learn
 pdfplumber
 python-dotenv
+numpy
+pandas
+requests
