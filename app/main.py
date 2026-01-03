@@ -6,6 +6,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import uuid
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.extract import extract_text_from_pdf
 from app.embed import chunk_text as embed_chunk_text, generate_embeddings, save_index, search as embed_search, load_embeddings
@@ -13,6 +14,13 @@ from app.embed import chunk_text as embed_chunk_text, generate_embeddings, save_
 from pydantic import BaseModel
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ["http://localhost:5173"],
+    allow_credentials = True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 
@@ -88,64 +96,96 @@ def search_endpoint(req: SearchReq):
         return {"error": "Embeddings or chunks not found for this doc_id"}
     return {"doc_id": req.doc_id, "query": req.query, "results": results}
 
+# @app.post("/answer")
+# def answer_endpoint(req: SearchReq):
+#     if not req.query or not req.query.strip():
+#         return {"error": "Query is empty"}
+#     results = embed_search(req.query, req.doc_id, top_k=req.top_k)
+#     if not results:
+#         return {"error": "No results or no index for this doc_id"}
+#     chosen_chunks = [r["chunk_text"] for r in results]
+#     sources = [r["chunk_index"] for r in results]
+#     joined = "\n\n".join(chosen_chunks)
+#     preview = joined[:3000]
+#     return {
+#         "doc_id": req.doc_id,
+#         "query": req.query,
+#         "answer_preview": preview,
+#         "sources": sources,
+#         "note": "Local concatenation of top-k chunks. Use an LLM for better synthesis."
+#     }
 @app.post("/answer")
 def answer_endpoint(req: SearchReq):
     if not req.query or not req.query.strip():
         return {"error": "Query is empty"}
+
+    # Get top-k relevant chunks
     results = embed_search(req.query, req.doc_id, top_k=req.top_k)
     if not results:
         return {"error": "No results or no index for this doc_id"}
-    chosen_chunks = [r["chunk_text"] for r in results]
-    sources = [r["chunk_index"] for r in results]
-    joined = "\n\n".join(chosen_chunks)
-    preview = joined[:3000]
+
+    # Filter chunks by score threshold (only keep relevant ones)
+    SCORE_THRESHOLD = 0.6
+    filtered = [r for r in results if r["score"] >= SCORE_THRESHOLD]
+
+    if not filtered:
+        # fallback: return top chunk if none pass threshold
+        filtered = [results[0]]
+
+    # Prepare preview (concatenate, limited length)
+    chunks_text = [r["chunk_text"] for r in filtered]
+    preview = "\n\n".join(chunks_text)
+    if len(preview) > 2000:
+        preview = preview[:2000] + "..."
+
+    # Return only relevant info
     return {
         "doc_id": req.doc_id,
         "query": req.query,
         "answer_preview": preview,
-        "sources": sources,
-        "note": "Local concatenation of top-k chunks. Use an LLM for better synthesis."
+        "sources": [r["chunk_index"] for r in filtered],
+        "note": "Top-k relevant chunks from document. Filtered by similarity score."
     }
 
 
-@app.post("/generate-answer")
-def generate_answer(req: SearchReq):
-    if not req.query.strip():
-        return {"error": "Empty query"}
+# @app.post("/generate-answer")
+# def generate_answer(req: SearchReq):
+#     if not req.query.strip():
+#         return {"error": "Empty query"}
 
-    # 1. Retrieve top chunks
-    results = embed_search(req.query, req.doc_id, top_k=req.top_k)
-    if not results:
-        return {"error": "No indexed chunks found for this document"}
+#     # 1. Retrieve top chunks
+#     results = embed_search(req.query, req.doc_id, top_k=req.top_k)
+#     if not results:
+#         return {"error": "No indexed chunks found for this document"}
 
-    # 2. Prepare context
-    context = "\n\n".join([r["chunk_text"] for r in results])
+#     # 2. Prepare context
+#     context = "\n\n".join([r["chunk_text"] for r in results])
 
-    prompt = f"""
-You are an expert assistant. Use ONLY the context below to answer the question.
-If the answer is not in the context, say "Information not found".
+#     prompt = f"""
+# You are an expert assistant. Use ONLY the context below to answer the question.
+# If the answer is not in the context, say "Information not found".
 
-Context:
-{context}
+# Context:
+# {context}
 
-Question: {req.query}
-Answer:
-"""
+# Question: {req.query}
+# Answer:
+# """
 
-    # 3. Call OpenAI LLM
-    response = client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-            {"role": "system", "content": "You answer using only provided context."},
-            {"role": "user", "content": prompt}
-        ]
-    )
+#     # 3. Call OpenAI LLM
+#     response = client.chat.completions.create(
+#         model="gpt-4.1-mini",
+#         messages=[
+#             {"role": "system", "content": "You answer using only provided context."},
+#             {"role": "user", "content": prompt}
+#         ]
+#     )
 
-    answer = response.choices[0].message["content"]
+#     answer = response.choices[0].message["content"]
 
-    return {
-        "doc_id": req.doc_id,
-        "query": req.query,
-        "answer": answer,
-        "sources": [r["chunk_index"] for r in results]
-    }
+#     return {
+#         "doc_id": req.doc_id,
+#         "query": req.query,
+#         "answer": answer,
+#         "sources": [r["chunk_index"] for r in results]
+#     }

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { uploadFile, processDoc, extractText } from "../api/api";
 
 type UploadFormProps = {
-  onUploaded: (doc: { doc_id: string; filename: string }) => void;
+  onUploaded: (id: string, filename: string) => void;
 };
 
 export default function UploadForm({ onUploaded }: UploadFormProps) {
@@ -18,12 +18,12 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
       const res = await uploadFile(file);
       const doc_id = res.data.doc_id;
       const filename = res.data.filename;
-      onUploaded({ doc_id, filename });
+      onUploaded(doc_id, filename);
 
       // Immediately process the document and fetch preview
-      await processDoc(doc_id);
-      const p = await extractText(doc_id);
-      setPreview(p.data.text_preview || "");
+      // await processDoc(doc_id);
+      // const p = await extractText(doc_id);
+      // setPreview(p.data.text_preview || "");
     } catch (err) {
       console.error(err);
       alert("Upload or processing failed. Check console.");

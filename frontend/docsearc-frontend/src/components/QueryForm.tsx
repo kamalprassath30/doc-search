@@ -1,20 +1,25 @@
 import React, { useState } from "react";
 import { searchAnswer } from "../api/api";
 
-export default function QueryForm({ doc }) {
+type QueryFormProps = {
+  docId: string;
+};
+
+export default function QueryForm({ docId }: QueryFormProps) {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
-  const [answer, setAnswer] = useState(null);
+  const [answer, setAnswer] = useState<any>(null);
 
   const ask = async () => {
-    if (!doc) {
+    if (!docId) {
       alert("Please upload a document!");
       return;
     }
     if (!q.trim()) return;
+
     setLoading(true);
     try {
-      const res = await searchAnswer(doc.doc_id, q, 3);
+      const res = await searchAnswer(docId, q, 3);
       setAnswer(res.data);
     } catch (err) {
       console.error(err);
@@ -27,16 +32,9 @@ export default function QueryForm({ doc }) {
   return (
     <div>
       <div style={{ marginBottom: 8, fontWeight: 600 }}>Ask a question</div>
-      <div
-        style={{
-          display: "flex",
-          gap: 8,
-          alignItems: "center",
-          marginBottom: 10,
-        }}
-      >
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
         <input
-          className="input"
           placeholder="Type your question..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -48,7 +46,6 @@ export default function QueryForm({ doc }) {
           }}
         />
         <button
-          className="btn"
           onClick={ask}
           disabled={loading}
           style={{
@@ -68,8 +65,8 @@ export default function QueryForm({ doc }) {
           <div style={{ color: "#6b7280", marginBottom: 6 }}>
             Answer (preview):
           </div>
-          <div className="result" style={{ marginTop: 8 }}>
-            {answer.answer_preview}
+          <div style={{ marginTop: 8 }}>
+            {answer.answer_preview.slice(0, 1000)}
           </div>
           <div style={{ marginTop: 8, color: "#6b7280" }}>
             Sources: {answer.sources?.join(", ")}

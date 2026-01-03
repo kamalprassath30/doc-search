@@ -1,4 +1,4 @@
-import React, { use, useState } from "react";
+import React, { useState } from "react";
 import UploadForm from "./components/UploadForm";
 import QueryForm from "./components/QueryForm";
 import { extractText, processDoc } from "./api/api";
@@ -11,7 +11,7 @@ const App: React.FC = () => {
   const [textPreview, setTextPreview] = useState<string>("");
   const [processed, setProcessed] = useState(false);
   const [documents, setDocuments] = useState<
-    { docId: String; filename: string }[]
+    { docId: string; filename: string }[]
   >([]);
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [answers, setAnswers] = useState<
@@ -69,7 +69,7 @@ const App: React.FC = () => {
             {selectedDoc ? (
               processed ? (
                 <QueryForm
-                  docId={selectedDoc}
+                  docId={docId!}
                   onAnswer={(ans) => setAnswers((s) => [ans, ...s])}
                 />
               ) : (
