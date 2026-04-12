@@ -16,8 +16,8 @@ export default function UploadForm({ onUploaded }: UploadFormProps) {
     setLoading(true);
     try {
       const res = await uploadFile(file);
-      const doc_id = res.data.doc_id;
-      const filename = res.data.filename;
+      const doc_id = res.doc_id;
+      const filename = res.filename;
       onUploaded(doc_id, filename);
 
       // Immediately process the document and fetch preview

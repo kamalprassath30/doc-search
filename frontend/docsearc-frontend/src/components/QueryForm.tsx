@@ -20,7 +20,8 @@ export default function QueryForm({ docId }: QueryFormProps) {
     setLoading(true);
     try {
       const res = await searchAnswer(docId, q, 3);
-      setAnswer(res.data);
+      setAnswer(res);
+      console.log("res: ", res);
     } catch (err) {
       console.error(err);
       alert("Search failed. Check console");
@@ -66,7 +67,8 @@ export default function QueryForm({ docId }: QueryFormProps) {
             Answer (preview):
           </div>
           <div style={{ marginTop: 8 }}>
-            {answer.answer_preview.slice(0, 1000)}
+            {/* {answer.answer_preview.slice(0, 1000)} */}
+            {answer.answer}
           </div>
           <div style={{ marginTop: 8, color: "#6b7280" }}>
             Sources: {answer.sources?.join(", ")}

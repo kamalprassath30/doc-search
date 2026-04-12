@@ -18,15 +18,19 @@ def get_model():
         _MODEL = SentenceTransformer(MODEL_NAME)
     return _MODEL
 
-def chunk_text(text, chunk_size=150, overlap=30):
-    """Split text into chunks of chunk_size words with overlap."""
-    words = text.split()
+def chunk_text(text, chunk_size=500, overlap=100):
     chunks = []
     start = 0
-    while start < len(words):
-        end = min(start + chunk_size, len(words))
-        chunks.append(" ".join(words[start:end]))
-        start += chunk_size - overlap  # move forward but keep overlap
+
+    while start < len(text):
+        end = start + chunk_size
+        chunk = text[start:end].strip()
+
+        if chunk:
+            chunks.append(chunk)
+
+        start = end - overlap
+
     return chunks
 
 def generate_embeddings(chunks):

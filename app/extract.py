@@ -11,5 +11,7 @@ def extract_text_from_pdf(path: Union[str, Path]) -> str:
     with pdfplumber.open(path) as pdf:
         for page in pdf.pages:
             page_text = page.extract_text() or ""
+            page_text = page_text.replace("\n", " ")
+            page_text = " ".join(page_text.split())
             full_text.append(page_text)
     return "\n".join(full_text)

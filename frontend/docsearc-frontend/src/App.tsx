@@ -27,7 +27,7 @@ const App: React.FC = () => {
 
     try {
       const textRes = await extractText(id);
-      setTextPreview(textRes.data.text_preview || "");
+      setTextPreview(textRes.text_preview || "");
     } catch (e) {
       console.error("extractText failed", e);
       setTextPreview("");
@@ -35,7 +35,7 @@ const App: React.FC = () => {
 
     try {
       const process = await processDoc(id);
-      if (process.data.status == "indexed") setProcessed(true);
+      if (process.status == "indexed") setProcessed(true);
     } catch (e) {
       console.error("ProcessDoc failed", e);
       setProcessed(false);
