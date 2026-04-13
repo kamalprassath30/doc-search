@@ -14,7 +14,7 @@ from transformers import pipeline
 
 # ✅ lightweight model
 generator = pipeline(
-    "text-generation,
+    "text-generation",
     # model="distilgpt2"
     model="google/flan-t5-small"
 )
